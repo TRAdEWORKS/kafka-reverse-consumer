@@ -1,4 +1,4 @@
-package jp.co.tworks.kafkareverseconsumer;
+package io.github.tradeworks.kafkareverseconsumer;
 
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;

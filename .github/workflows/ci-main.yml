@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: List GPG keys 1
+        run: gpg --list-signatures --keyid-format 0xshort
+
       - name: Set up Maven Central Repository
         uses: actions/setup-java@v2
         with:
@@ -21,20 +24,26 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: Construct version number
-        id: version
-        run: echo "::set-output name=version::$(date +'%Y%m%d').${GITHUB_RUN_NUMBER}"
-        env:
-          TZ: Asia/Tokyo
+      - name: List GPG keys 2
+        run: gpg --list-signatures --keyid-format 0xshort
 
-      - name: Set Maven version
-        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ steps.version.outputs.version }}
+      - name: cat ~/.m2/settings.xml
+        run: cat settings.xml
 
-      - name: Publish package
-        run: mvn -X --batch-mode --no-transfer-progress deploy
-
-      - name: git tag
-        run: git tag "$(build.buildNumber)"
-
-      - name: git push --tags
-        run: git push --tags
+#      - name: Construct version number
+#        id: version
+#        run: echo "::set-output name=version::$(date +'%Y%m%d').${GITHUB_RUN_NUMBER}"
+#        env:
+#          TZ: Asia/Tokyo
+#
+#      - name: Set Maven version
+#        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ steps.version.outputs.version }}
+#
+#      - name: Publish package
+#        run: mvn -X --batch-mode --no-transfer-progress deploy
+#
+#      - name: git tag
+#        run: git tag "$(build.buildNumber)"
+#
+#      - name: git push --tags
+#        run: git push --tags

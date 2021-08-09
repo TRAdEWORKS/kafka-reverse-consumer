@@ -1,0 +1,43 @@
+name: CI for main branch
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          server-id: ossrh
+          server-username: ${{ secrets.OSSRH_USERNAME }}
+          server-password: ${{ secrets.OSSRH_PASSWORD }}
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Construct version number
+        id: version
+        run: echo "::set-output name=version::$(date +'%Y%m%d').${GITHUB_RUN_NUMBER}"
+        env:
+          TZ: Asia/Tokyo
+
+      - name: Print version number
+        run: echo ${{ steps.version.outputs.version }}
+
+      - name: Set Maven version
+        run: mvn versions:set -DnewVersion=${{ steps.version.outputs.version }}
+
+      - name: Publish package
+        run: mvn --batch-mode deploy
+
+      - name: git tag
+        run: git tag "$(build.buildNumber)"
+
+      - name: git push --tags
+        run: git push --tags

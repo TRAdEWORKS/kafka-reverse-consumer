@@ -2,9 +2,35 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <name>kafka-reverse-consumer</name>
+    <description>A library that enables the consumption of Kafka messages in reverse order</description>
+    <url>https://github.com/TRAdEWORKS/kafka-reverse-consumer</url>
+
     <groupId>io.github.tradeworks</groupId>
     <artifactId>kafka-reverse-consumer</artifactId>
     <version>0-SNAPSHOT</version>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Eugen Dueck</name>
+            <email>eugen@tworks.co.jp</email>
+            <organization>TRAdEWORKS</organization>
+            <organizationUrl>http://www.tworks.co.jp</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/TRAdEWORKS/kafka-reverse-consumer.git</connection>
+        <developerConnection>scm:git:ssh://github.com:TRAdEWORKS/kafka-reverse-consumer.git</developerConnection>
+        <url>http://github.com/TRAdEWORKS/kafka-reverse-consumer/tree/develop</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

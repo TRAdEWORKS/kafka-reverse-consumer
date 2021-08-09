@@ -28,7 +28,7 @@ jobs:
         run: gpg --list-signatures --keyid-format 0xshort
 
       - name: cat ~/.m2/settings.xml
-        run: cat settings.xml
+        run: cat ~/.m2/settings.xml
 
 #      - name: Construct version number
 #        id: version

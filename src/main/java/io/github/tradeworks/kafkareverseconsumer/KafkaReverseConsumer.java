@@ -16,19 +16,25 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
     private final int seekDelta;
     private final Consumer<K, V> underlyingConsumer;
     private final Comparator<ConsumerRecord<K, V>> reverseOffsetComparator;
+    private final Map<TopicPartition, Long> beginningOffsets = new HashMap<>();
     private final Map<TopicPartition, SortedSet<ConsumerRecord<K, V>>> buffer = new HashMap<>();
-
     /**
      * Contains the offset of the next record to be returned by poll; the actual offset of the next record may be
      * smaller, due to log compaction (TODO: or when using a consumer in read_committed mode).
      */
     private final Map<TopicPartition, Long> positions = new HashMap<>();
+    private final Set<TopicPartition> reachedBeginning = new HashSet<>();
 
     public KafkaReverseConsumer(Consumer<K, V> underlyingConsumer, int maxPollRecords) {
         this.underlyingConsumer = underlyingConsumer;
         Comparator<ConsumerRecord<K, V>> offsetComparator = Comparator.comparing(ConsumerRecord::offset);
         reverseOffsetComparator = offsetComparator.reversed();
         seekDelta = maxPollRecords;
+    }
+
+    @Override
+    public Set<TopicPartition> reachedBeginning() {
+        return new HashSet<>(reachedBeginning);
     }
 
     @Override
@@ -72,9 +78,14 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
                     }
                 }
                 if (!hasGap) {
-                    final long seekOffset = position - seekDelta + 1;
-                    log.debug("partition {}: Seeking to offset {}", partition, seekOffset);
-                    underlyingConsumer.seek(partition, seekOffset);
+                    if (position < beginningOffsets.getOrDefault(partition, 0L)) {
+                        log.debug("partition {}: Reached beginning at offset {}", partition, position + 1);
+                        setReachedBeginning(partition);
+                    } else {
+                        final long seekOffset = position - seekDelta + 1;
+                        log.debug("partition {}: Seeking to offset {}", partition, seekOffset);
+                        underlyingConsumer.seek(partition, seekOffset);
+                    }
                 }
                 if (reverseRecords.size() > 0) {
                     boolean wasBuffered = reverseRecords instanceof TreeSet;
@@ -106,16 +117,25 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
      */
     @Override
     public void assign(Collection<TopicPartition> partitions) {
+        // TODO: Check if Consumer.assign clears the paused state - currently I'm assuming it does
         underlyingConsumer.assign(partitions);
+        clearState();
         determinePositions(partitions);
         seekToPositions();
     }
 
-    private void determinePositions(Collection<TopicPartition> partitions) {
+    private void clearState() {
+        beginningOffsets.clear();
+        buffer.clear();
         positions.clear();
+        reachedBeginning.clear();
+    }
+
+    private void determinePositions(Collection<TopicPartition> partitions) {
         final Map<TopicPartition, Long> beginningOffsets = underlyingConsumer.beginningOffsets(partitions);
         if (partitions.size() != beginningOffsets.size()) // should never happen
             throw new RuntimeException("requested beginning offsets for " + partitions + " partitions, but received " + beginningOffsets);
+        this.beginningOffsets.putAll(beginningOffsets);
         final Map<TopicPartition, Long> endOffsets = underlyingConsumer.endOffsets(partitions);
         if (partitions.size() != endOffsets.size()) // should never happen
             throw new RuntimeException("requested end offsets for " + partitions + " partitions, but received " + endOffsets);
@@ -127,25 +147,23 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
         }
     }
 
+    private void setReachedBeginning(TopicPartition partition) {
+        underlyingConsumer.pause(Set.of(partition));
+        reachedBeginning.add(partition);
+    }
+
     private void seekToPositions() {
-        List<TopicPartition> pauseThese = new ArrayList<>();
-        List<TopicPartition> resumeThese = new ArrayList<>();
         for (Map.Entry<TopicPartition, Long> entry : positions.entrySet()) {
             final TopicPartition partition = entry.getKey();
             final Long position = entry.getValue();
             if (position == -1) {
-                pauseThese.add(partition);
+                setReachedBeginning(partition);
                 continue;
             }
-            resumeThese.add(partition); // todo: is this necessary, when we seek?
             long seekOffset = Math.max(0, position - seekDelta + 1);
             underlyingConsumer.seek(partition, seekOffset);
             log.debug("partition {}: Seeking to offset {} in assign", partition, seekOffset);
         }
-        if (pauseThese.size() > 0)
-            underlyingConsumer.pause(pauseThese);
-        if (resumeThese.size() > 0)
-            underlyingConsumer.resume(resumeThese);
     }
 
     // purely delegating methods

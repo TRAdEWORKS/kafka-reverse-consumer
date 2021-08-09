@@ -27,14 +27,11 @@ jobs:
         env:
           TZ: Asia/Tokyo
 
-      - name: Print version number
-        run: echo ${{ steps.version.outputs.version }}
-
       - name: Set Maven version
-        run: mvn versions:set -DnewVersion=${{ steps.version.outputs.version }}
+        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ steps.version.outputs.version }}
 
       - name: Publish package
-        run: mvn --batch-mode deploy
+        run: mvn --batch-mode --no-transfer-progress deploy
 
       - name: git tag
         run: git tag "$(build.buildNumber)"

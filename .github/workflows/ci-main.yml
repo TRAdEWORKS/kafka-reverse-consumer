@@ -31,7 +31,7 @@ jobs:
         run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ steps.version.outputs.version }}
 
       - name: Publish package
-        run: mvn -X --batch-mode --no-transfer-progress deploy
+        run: mvn -X --batch-mode --no-transfer-progress -Prelease deploy
         env:
           SERVER_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

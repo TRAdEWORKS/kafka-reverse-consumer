@@ -31,7 +31,8 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
         seekDelta = maxPollRecords;
     }
 
-    @Override public ConsumerRecords<K, V> poll(Duration timeout) {
+    @Override
+    public ConsumerRecords<K, V> poll(Duration timeout) {
         long endTime = System.nanoTime() + timeout.toNanos();
         Map<TopicPartition, List<ConsumerRecord<K, V>>> reverseRecordsMap = new HashMap<>();
         do {
@@ -103,7 +104,8 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
     /**
      * Will reset all positions.
      */
-    @Override public void assign(Collection<TopicPartition> partitions) {
+    @Override
+    public void assign(Collection<TopicPartition> partitions) {
         underlyingConsumer.assign(partitions);
         determinePositions(partitions);
         seekToPositions();
@@ -147,6 +149,9 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
     }
 
     // purely delegating methods
+    @Override public Set<TopicPartition> paused() { return underlyingConsumer.paused(); }
+    @Override public void pause(Collection<TopicPartition> partitions) { underlyingConsumer.pause(partitions); }
+    @Override public void resume(Collection<TopicPartition> partitions) { underlyingConsumer.resume(partitions); }
     @Override public void close() { underlyingConsumer.close(); }
     @Override public void close(Duration timeout) { underlyingConsumer.close(timeout); }
     @Override public void wakeup() { underlyingConsumer.wakeup(); }

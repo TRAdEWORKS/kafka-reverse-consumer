@@ -34,7 +34,7 @@ jobs:
         run: mvn -X --batch-mode --no-transfer-progress deploy
 
       - name: git tag
-        run: git tag "$(build.buildNumber)"
+        run: git tag ${{ steps.version.outputs.version }}
 
       - name: git push --tags
         run: git push --tags

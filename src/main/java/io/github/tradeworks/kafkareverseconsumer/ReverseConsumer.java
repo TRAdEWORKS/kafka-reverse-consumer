@@ -12,10 +12,12 @@ import java.util.Set;
 public interface ReverseConsumer<K, V> extends Closeable {
 
     /**
-     * Get the set of partitions whose consumption reached the beginning.
-     * These partitions will be paused as well.
+     * Determine if consumption from the given partition has reached the beginning.
+     * Returns false for partitions that are not assigned.
+     *
+     * Partitions that have reached the beginning will have been paused.
      */
-    Set<TopicPartition> reachedBeginning();
+    boolean reachedBeginning(TopicPartition partition);
 
     /**
      * @see org.apache.kafka.clients.consumer.KafkaConsumer#assign(Collection)

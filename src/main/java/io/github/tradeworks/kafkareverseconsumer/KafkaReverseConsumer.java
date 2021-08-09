@@ -33,8 +33,8 @@ public class KafkaReverseConsumer<K, V> implements ReverseConsumer<K, V> {
     }
 
     @Override
-    public Set<TopicPartition> reachedBeginning() {
-        return new HashSet<>(reachedBeginning);
+    public boolean reachedBeginning(TopicPartition partition) {
+        return reachedBeginning.contains(partition);
     }
 
     @Override

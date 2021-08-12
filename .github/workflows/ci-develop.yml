@@ -25,8 +25,8 @@ jobs:
 
       - name: Calculate Coverage
         run: |
-          export ELEM=$(sed -nre \'s/^.*<metrics.* elements="([^"]+)".*$/\1/p\' target/site/clover/clover.xml|head -n1)
-          export COV_ELEM=$(sed -nre \'s/^.*<metrics.* coveredelements="([^"]+)".*$/\1/p\' target/site/clover/clover.xml|head -n1)
+          export ELEM=$(sed -nre 's/^.*<metrics.* elements="([^"]+)".*$/\1/p' target/site/clover/clover.xml|head -n1)
+          export COV_ELEM=$(sed -nre 's/^.*<metrics.* coveredelements="([^"]+)".*$/\1/p' target/site/clover/clover.xml|head -n1)
           export COV=$(echo "a=(100*${COV_ELEM}/${ELEM}+0.5); scale=0; a/1"|bc -l)
           export COV_COL=$(awk "BEGIN {print $COV >= 70 ? \"green\" : ($COV >= 50 ? \"orange\" : \"red\")}")
 

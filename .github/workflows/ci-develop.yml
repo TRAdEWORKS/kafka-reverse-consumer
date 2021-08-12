@@ -36,5 +36,7 @@ jobs:
 
       - name: Commit and push README.md
         run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
           git commit README.md -m "update coverage to ${COV}% for github action run ${GITHUB_ACTION}"
-          git push
+          git push origin develop

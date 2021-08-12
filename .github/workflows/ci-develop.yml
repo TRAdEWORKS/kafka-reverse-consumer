@@ -19,5 +19,22 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Maven Build
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots verify
+      - name: Mvn test with coverage
+        run: >
+          mvn --batch-mode --no-transfer-progress --update-snapshots org.openclover:clover-maven-plugin:4.4.1:setup test org.openclover:clover-maven-plugin:4.4.1:aggregate org.openclover:clover-maven-plugin:4.4.1:clover
+
+      - name: Calculate Coverage
+        run: |
+          export ELEM=$(sed -nre \'s/^.*<metrics.* elements="([^"]+)".*$/\1/p\' target/site/clover/clover.xml|head -n1)
+          export COV_ELEM=$(sed -nre \'s/^.*<metrics.* coveredelements="([^"]+)".*$/\1/p\' target/site/clover/clover.xml|head -n1)
+          export COV=$(echo "a=(100*${COV_ELEM}/${ELEM}+0.5); scale=0; a/1"|bc -l)
+          export COV_COL=$(awk "BEGIN {print $COV >= 70 ? \"green\" : ($COV >= 50 ? \"orange\" : \"red\")}")
+
+      - name: Embed Coverage in README.md
+        run: >
+          sed -i -re "s,^\[!\[coverage: .*$,[![coverage: ${COV}%](https://img.shields.io/badge/coverage-${COV}-${COV_COL})](https://github.com/TRAdEWORKS/kafka-reverse-consumer/actions/runs/${GITHUB_ACTION})," README.md
+
+      - name: Commit and push README.md
+        run: |
+          git commit README.md -m "update coverage to ${COV}% for github action run ${GITHUB_ACTION}"
+          git push

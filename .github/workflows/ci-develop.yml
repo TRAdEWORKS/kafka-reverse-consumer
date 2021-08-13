@@ -34,15 +34,16 @@ jobs:
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
 
-      - name: Commit badge (if changed)
+      - name: Embed coverage result in README.md
+        run: >
+          sed -i -re "s,^\[!\[Coverage.*$,[![Coverage: ${{ steps.jacoco.outputs.coverage }}](.github/badges/jacoco.svg)](https://github.com/TRAdEWORKS/kafka-reverse-consumer/actions/runs/${GITHUB_RUN_ID}#artifacts)," README.md
+
+      - name: Commit and push coverage result
         run: |
-          if [[ `git status --porcelain` ]]; then
-            git config user.name "GitHub Actions Bot"
-            git config user.email "<>"
-            git add -A
-            git commit -m "update coverage badge (result: ${{ steps.jacoco.outputs.coverage }})"
-            git push
-          fi
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git commit README.md .github/badge -m "update coverage result ${{ steps.jacoco.outputs.coverage }})"
+          git push
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2

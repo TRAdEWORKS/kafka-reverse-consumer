@@ -42,7 +42,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git commit README.md .github/badge -m "update coverage result ${{ steps.jacoco.outputs.coverage }})"
+          git commit README.md .github/badges -m "update coverage result ${{ steps.jacoco.outputs.coverage }})"
           git push
 
       - name: Archive code coverage results

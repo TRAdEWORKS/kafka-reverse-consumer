@@ -21,30 +21,15 @@ jobs:
 
       - name: Mvn test with coverage
         run: >
-          mvn --batch-mode --no-transfer-progress --update-snapshots org.openclover:clover-maven-plugin:4.4.1:setup test org.openclover:clover-maven-plugin:4.4.1:aggregate org.openclover:clover-maven-plugin:4.4.1:clover
+          mvn --batch-mode --no-transfer-progress --update-snapshots org.jacoco:jacoco-maven-plugin:0.8.7:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.7:report
 
-      - name: Calculate coverage result
-        run: |
-          export ELEM=$(sed -nre 's/^.*<metrics.* elements="([^"]+)".*$/\1/p' target/site/clover/clover.xml|head -n1)
-          export COV_ELEM=$(sed -nre 's/^.*<metrics.* coveredelements="([^"]+)".*$/\1/p' target/site/clover/clover.xml|head -n1)
-          export COV=$(echo "a=(100*${COV_ELEM}/${ELEM}+0.5); scale=0; a/1"|bc -l)
-          export COV_COL=$(awk "BEGIN {print $COV >= 70 ? \"green\" : ($COV >= 50 ? \"orange\" : \"red\")}")
-          echo "COV=$COV" >> $GITHUB_ENV
-          echo "COV_COL=$COV_COL" >> $GITHUB_ENV
-
-      - name: Embed coverage result in README.md
-        run: >
-          sed -i -re "s,^\[!\[coverage: .*$,[![coverage: ${COV}%](https://img.shields.io/badge/coverage-${COV}-${COV_COL})](https://github.com/TRAdEWORKS/kafka-reverse-consumer/actions/runs/${GITHUB_RUN_ID})," README.md
-
-      - name: Commit and push README.md
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git commit README.md -m "update coverage to ${COV}% (${COV_COL}) for github action run ${GITHUB_RUN_ID}"
-          git push origin develop
+      - name: Generate JaCoCo badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2
         with:
           name: code-coverage-report
-          path: target/site/clover
+          path: target/site/jacoco
